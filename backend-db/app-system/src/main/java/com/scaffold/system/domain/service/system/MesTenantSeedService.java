@@ -39,6 +39,16 @@ public class MesTenantSeedService implements MesTenantSeedProvider {
 
     private static final List<String> MES_PERMISSIONS = List.of(
             "APP_MES_PARENT",
+            "APP_MES_SHOPFLOOR",
+            "APP_MES_LOT_ACTION",
+            "APP_MES_PROCESS",
+            "APP_MES_MASTER",
+            "APP_MES_FACTORY",
+            "APP_MES_MATERIAL_STORE",
+            "APP_MES_WAFER_PACK",
+            "APP_MES_TRACE",
+            "APP_MES_DATA_IMPORT",
+            "APP_MES_RULE_CONFIG",
             "APP_MES_SEQUENCE_RULE",
             "mes:sequence-rule:add",
             "mes:sequence-rule:edit",
