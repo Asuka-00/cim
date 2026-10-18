@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 引入 Spring Boot 默认配置（含彩色转换器 %highlight / %cyan 等） -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <property name="APP_NAME" value="app-backend" />
+    <springProperty name="LOG_PATH" source="logging.file-path" defaultValue="logs" />
+    <springProperty name="LOG_MAX_HISTORY" source="logging.file-max-history" defaultValue="30" />
+    <springProperty name="LOG_MAX_SIZE" source="logging.file-max-size" defaultValue="100MB" />
+    <springProperty name="LOG_ASYNC_QUEUE" source="logging.async-queue-size" defaultValue="512" />
+    <springProperty name="LOG_ENV" source="spring.profiles.active" defaultValue="default" />
+    <!-- 控制台最低级别：dev=DEBUG；非 dev 只输出告警，完整运行日志看 app.log -->
+    <springProperty name="CONSOLE_LEVEL" source="logging.console-threshold" defaultValue="WARN" />
+
+    <!-- 人类可读控制台 pattern -->
+    <property name="CONSOLE_TEXT_PATTERN"
+        value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) [trace=%X{traceId:-}] %msg%n%wEx" />
+
+    <!-- 公共 JSON 字段：应用名 + 环境（多实例采集可按 env 过滤） -->
+    <property name="JSON_CUSTOM_FIELDS"
+        value='{"appName":"${APP_NAME}","env":"${LOG_ENV}"}' />
+
+    <!-- ==================== 控制台：dev 人类可读 ==================== -->
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_TEXT_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>${CONSOLE_LEVEL}</level>
+            </filter>
+        </appender>
+    </springProfile>
+
+    <!-- ==================== 控制台：非 dev JSON ==================== -->
+    <springProfile name="!dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <timeZone>Asia/Shanghai</timeZone>
+                <customFields>${JSON_CUSTOM_FIELDS}</customFields>
+            </encoder>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>${CONSOLE_LEVEL}</level>
+            </filter>
+        </appender>
+    </springProfile>
+
+    <!-- ==================== 应用运行日志 app.log ==================== -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>Asia/Shanghai</timeZone>
+            <customFields>{"appName":"${APP_NAME}","env":"${LOG_ENV}","logType":"app"}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- ==================== 审计日志：仅真正的审计事件 ==================== -->
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/audit.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>Asia/Shanghai</timeZone>
+            <customFields>{"appName":"${APP_NAME}","env":"${LOG_ENV}","logType":"audit"}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- ==================== SQL 日志 ==================== -->
+    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/sql.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/sql.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>Asia/Shanghai</timeZone>
+            <customFields>{"appName":"${APP_NAME}","env":"${LOG_ENV}","logType":"sql"}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- ==================== 性能 / 错误 ==================== -->
+    <appender name="PERFORMANCE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/performance.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/performance.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>Asia/Shanghai</timeZone>
+            <customFields>{"appName":"${APP_NAME}","env":"${LOG_ENV}","logType":"performance"}</customFields>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>Asia/Shanghai</timeZone>
+            <customFields>{"appName":"${APP_NAME}","env":"${LOG_ENV}","logType":"error"}</customFields>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!--
+      控制台异步：ConsoleAppender 每次写都持有同一把锁，IDE 控制台 / 容器 stdout 慢时请求线程会排队。
+      控制台只是观察通道，满了直接丢；错误与审计另有不丢的文件通道。
+    -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="CONSOLE" />
+    </appender>
+
+    <!-- 异步：应用/SQL 可丢弃；审计/错误尽量不丢（neverBlock=false） -->
+    <appender name="ASYNC_APP" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="APP_FILE" />
+    </appender>
+
+    <appender name="ASYNC_SQL" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="SQL_FILE" />
+    </appender>
+
+    <appender name="ASYNC_AUDIT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>false</neverBlock>
+        <appender-ref ref="AUDIT_FILE" />
+    </appender>
+
+    <appender name="ASYNC_PERFORMANCE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="PERFORMANCE_FILE" />
+    </appender>
+
+    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${LOG_ASYNC_QUEUE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>false</neverBlock>
+        <appender-ref ref="ERROR_FILE" />
+    </appender>
+
+    <!-- ========== Logger 路由 ========== -->
+
+    <!-- JWT 过滤器：不进 app/audit 刷屏 -->
+    <logger name="com.scaffold.system.infra.security.rbac.JwtAuthenticationFilter" level="WARN"
+        additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE" />
+        <appender-ref ref="ASYNC_ERROR" />
+    </logger>
+
+    <!-- 业务应用日志 → app.log（不再进 audit） -->
+    <springProfile name="dev">
+        <logger name="com.scaffold" level="DEBUG" additivity="false">
+            <appender-ref ref="ASYNC_CONSOLE" />
+            <appender-ref ref="ASYNC_APP" />
+            <appender-ref ref="ASYNC_ERROR" />
+        </logger>
+    </springProfile>
+    <springProfile name="!dev">
+        <logger name="com.scaffold" level="INFO" additivity="false">
+            <appender-ref ref="ASYNC_CONSOLE" />
+            <appender-ref ref="ASYNC_APP" />
+            <appender-ref ref="ASYNC_ERROR" />
+        </logger>
+    </springProfile>
+
+    <!-- SQL 专用通道（SqlSingleLineLog 写入 logger=SQL） -->
+    <logger name="SQL" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE" />
+        <appender-ref ref="ASYNC_SQL" />
+    </logger>
+
+    <!-- 性能：只关心慢调用/异常（WARN+）；成功路径 PERFORMANCE_OK 不刷控制台与文件 -->
+    <logger name="PERFORMANCE" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_PERFORMANCE" />
+        <appender-ref ref="ASYNC_CONSOLE" />
+    </logger>
+
+    <!-- 审计：仅 AUDIT logger / @AuditLog 切面 -->
+    <logger name="AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_AUDIT" />
+        <appender-ref ref="ASYNC_CONSOLE" />
+    </logger>
+
+    <!-- 框架降噪 -->
+    <logger name="org.springframework" level="WARN" />
+    <logger name="org.springframework.web" level="INFO" />
+    <logger name="org.springframework.security" level="WARN" />
+    <logger name="org.mybatis" level="INFO" />
+    <logger name="com.baomidou" level="INFO" />
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE" />
+        <appender-ref ref="ASYNC_ERROR" />
+    </root>
+</configuration>

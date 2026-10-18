@@ -1,0 +1,4 @@
+com.scaffold.share.db.DatabaseKindAutoConfiguration
+com.scaffold.share.config.LoggingAutoConfiguration
+com.scaffold.share.config.WebMvcAutoConfiguration
+com.scaffold.share.cache.QueryCacheAutoConfiguration

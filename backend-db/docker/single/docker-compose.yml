@@ -1,0 +1,104 @@
+# Scaffold 单机部署 — 所有服务默认映射到宿主机 0.0.0.0，便于局域网排查。
+# 外部端口一览见 README「端口」。纯 DB 模式：MySQL + Redis（令牌/ticket），无 Kafka。
+services:
+  mysql:
+    image: mysql:8.0-oraclelinux8
+    container_name: scaffold-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    ports:
+      - "0.0.0.0:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - /etc/localtime:/etc/localtime:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --bind-address=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scaffold-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: scaffold-redis
+    command: ["redis-server", "--requirepass", "password", "--appendonly", "yes", "--appendfsync", "everysec"]
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "0.0.0.0:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scaffold-network
+
+  # 单应用容器：jar 内嵌前端；UI 与 API 同源（默认 8848 -> 18080）
+  # 在线更版依赖 volume 中的 current 软链；重启策略 must 为 unless-stopped/always
+  app:
+    image: scaffold-app:${APP_VERSION:-latest}
+    build: ./backend
+    container_name: scaffold-app
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      INSTANCE_NAME: app
+      APP_RELEASE_HOME: /opt/scaffold
+    ports:
+      - "0.0.0.0:${APP_PORT:-8848}:18080"
+      - "0.0.0.0:${APP_API_PORT:-18080}:18080"
+    volumes:
+      - ./data/scaffold-home:/opt/scaffold
+      - ./data/backend/logs:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # stdout 只有告警；完整日志在 /app/logs，由 logback 自行滚动
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - scaffold-network
+
+  oauth2-mock:
+    image: ghcr.io/navikt/mock-oauth2-server:2.1.10
+    container_name: scaffold-oauth2-mock
+    environment:
+      SERVER_PORT: "8080"
+      LOG_LEVEL: "info"
+      TZ: Asia/Shanghai
+    ports:
+      - "0.0.0.0:${OAUTH2_PORT:-8180}:8080"
+    restart: unless-stopped
+    networks:
+      - scaffold-network
+
+networks:
+  scaffold-network:
+    name: scaffold-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+
+volumes:
+  mysql-data:
+  redis-data:

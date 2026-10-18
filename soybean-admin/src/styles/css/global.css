@@ -1,0 +1,169 @@
+@import './reset.css';
+@import './nprogress.css';
+@import './transition.css';
+
+html,
+body,
+#app {
+  height: 100%;
+  text-autospace: normal;
+}
+
+html {
+  overflow-x: hidden;
+  color: rgb(var(--base-text-color));
+  font-size: 14px;
+}
+
+html[data-ui-size='small'] {
+  font-size: 13px;
+}
+
+html[data-ui-size='large'] {
+  font-size: 16px;
+}
+
+html[data-ui-size='small'] body,
+html[data-ui-size='small'] .rtd-page,
+html[data-ui-size='small'] .n-layout {
+  font-size: 13px;
+}
+
+html[data-ui-size='large'] body,
+html[data-ui-size='large'] .rtd-page,
+html[data-ui-size='large'] .n-layout {
+  font-size: 16px;
+}
+
+/* RTD list pages: fill remaining viewport, scroll only inside the table */
+.rtd-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rtd-page.flex-row {
+  flex-direction: row;
+}
+
+.rtd-page__filter,
+.rtd-page > .n-card:first-child:not(.rtd-page-card) {
+  flex-shrink: 0;
+}
+
+.rtd-page-card.n-card {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rtd-page-card.n-card > .n-card-header {
+  flex-shrink: 0;
+}
+
+.rtd-page-card.n-card > .n-card-content {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rtd-page-card .n-data-table {
+  flex: 1 1 0%;
+  height: 0;
+  min-height: 0;
+}
+
+.rtd-page-card .n-data-table + div,
+.rtd-page-card .rtd-page__pager {
+  flex-shrink: 0;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+
+.n-data-table-th,
+.n-data-table-td {
+  white-space: nowrap;
+}
+
+.n-data-table-td:not(:has(.n-button)):not(:has(.n-checkbox)):not(:has(.n-switch)) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.n-data-table-td .n-ellipsis,
+.n-data-table-th .n-ellipsis {
+  max-width: 100%;
+}
+
+/* Naive .n-card { width: 100% } overrides UnoCSS w-* on teleported card modals */
+.n-modal.n-card {
+  max-width: 90vw;
+}
+
+.n-modal.n-card.w-420px {
+  width: 420px;
+}
+.n-modal.n-card.w-480px {
+  width: 480px;
+}
+.n-modal.n-card.w-520px {
+  width: 520px;
+}
+.n-modal.n-card.w-560px {
+  width: 560px;
+}
+.n-modal.n-card.w-630px {
+  width: 630px;
+}
+.n-modal.n-card.w-640px {
+  width: 640px;
+}
+.n-modal.n-card.w-680px {
+  width: 680px;
+}
+.n-modal.n-card.w-720px {
+  width: 720px;
+}
+.n-modal.n-card.w-800px {
+  width: 800px;
+}
+.n-modal.n-card.w-860px {
+  width: 860px;
+}
+.n-modal.n-card.w-900px {
+  width: 900px;
+}
+.n-modal.n-card.w-90vw {
+  width: 90vw;
+  max-width: 1100px;
+}
+
+.n-modal.n-card.size-full {
+  width: 100%;
+  max-width: 100%;
+}
+
+.n-modal.n-card > .n-card-content {
+  min-width: 0;
+  max-height: calc(90vh - 148px);
+  overflow: auto;
+}
+
+.n-modal .n-descriptions-table-header,
+.n-drawer .n-descriptions-table-header {
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.n-modal .n-descriptions-table-content,
+.n-drawer .n-descriptions-table-content {
+  min-width: 0;
+  overflow: auto;
+  word-break: break-word;
+}
